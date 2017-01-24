@@ -1,0 +1,6 @@
+
+GET     /                           controllers.HomeController.index
+GET     /api/todo/:id                   controllers.HomeController.todo(id: Int)
+OPTIONS /api/todo/*path                   controllers.HomeController.preFright(path: Asset)
+
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
