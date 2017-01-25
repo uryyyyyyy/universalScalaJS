@@ -1,0 +1,38 @@
+{
+  "name": "ReactNativeSample_android",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "flow": "flow",
+    "flow-typed": "flow-typed install",
+    "start": "react-native run-android",
+    "test:ut": "mocha --compilers js:babel-register ./testPolyfill.js",
+    "test:all": "mocha --compilers js:babel-register ./testPolyfill.js src/**/*.spec.js",
+    "server": "node dev-server.js",
+    "connect": "adb reverse tcp:8081 tcp:8081 && adb reverse tcp:3000 tcp:3000&& adb reverse tcp:9000 tcp:9000"
+  },
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "deep-equal": "^1.0.1",
+    "react": "15.4.1",
+    "react-native": "0.39.2",
+    "react-redux": "^5.0.1",
+    "redux": "^3.6.0"
+  },
+  "devDependencies": {
+    "babel-preset-power-assert": "^1.0.0",
+    "babel-preset-react-native": "1.9.1",
+    "enzyme": "^2.7.0",
+    "express": "^4.14.0",
+    "fetch-mock": "^5.8.0",
+    "flow-bin": "^0.35.0",
+    "flow-typed": "^2.0.0",
+    "mocha": "^3.2.0",
+    "power-assert": "^1.4.2",
+    "react-native-mock": "^0.2.9",
+    "sinon": "^1.17.7"
+  },
+  "jest": {
+    "preset": "react-native"
+  }
+}

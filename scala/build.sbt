@@ -15,6 +15,7 @@ lazy val server = (project in file("server"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
+      "com.lihaoyi" %% "upickle" % "0.4.3",
       "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test
     )
   ).enablePlugins(PlayScala)
@@ -29,7 +30,5 @@ lazy val front = (project in file("front"))
     unmanagedSourceDirectories in Compile <++= unmanagedSourceDirectories in core in Compile,
     scalaJSModuleKind := ModuleKind.CommonJSModule,
     libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.1",
-    libraryDependencies += "io.circe" %%% "circe-core" % "0.7.0",
-    libraryDependencies += "io.circe" %%% "circe-parser" % "0.7.0",
-    libraryDependencies += "io.circe" %%% "circe-generic" % "0.7.0"
+    libraryDependencies += "com.lihaoyi" %%% "upickle" % "0.4.3"
   ).enablePlugins(ScalaJSPlugin)
