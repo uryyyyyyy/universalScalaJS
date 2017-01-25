@@ -1,4 +1,4 @@
-package com.native;
+package com.reactnativesample_android;
 
 import com.facebook.react.ReactActivity;
 
@@ -10,6 +10,6 @@ public class MainActivity extends ReactActivity {
      */
     @Override
     protected String getMainComponentName() {
-        return "native";
+        return "ReactNativeSample_android";
     }
 }

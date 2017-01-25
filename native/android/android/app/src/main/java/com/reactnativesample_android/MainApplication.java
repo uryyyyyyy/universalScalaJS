@@ -1,4 +1,4 @@
-package com.native;
+package com.reactnativesample_android;
 
 import android.app.Application;
 import android.util.Log;
