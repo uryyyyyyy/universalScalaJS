@@ -20,7 +20,7 @@ object ToDoReduxModule {
   @JSExport
   def createToDoActionDispatcher(
     dispatch: js.Function1[ToDoAction, js.Any],
-    todoList: js.Array[ToDoVO],
+    todoList: js.Array[ToDoJS],
     actionType: String
   ): ToDoActionDispatcher = {
     new ToDoActionDispatcher(dispatch, todoList, actionType)
@@ -35,13 +35,13 @@ object ToDoReduxModule {
 
 class ToDoActionDispatcher(
   val dispatch: js.Function1[ToDoAction, js.Any],
-  val _todoList: js.Array[ToDoVO],
+  val _todoList: js.Array[ToDoJS],
   val actionType: String
 ) {
   @JSExport
   def addToDo(_title: String): Unit = {
     val newId = new Random().nextInt(10000).toString
-    val newToDo = new ToDoVO {
+    val newToDo = new ToDoJS {
       val isCompleted: Boolean = false
       val title: String = _title
       val id: String = newId
@@ -57,7 +57,7 @@ class ToDoActionDispatcher(
   @JSExport
   def complete(_id: String): Unit = {
     val newList = _todoList.toSeq.map(todo => {
-      if(todo.id != _id) todo else new ToDoVO {
+      if(todo.id != _id) todo else new ToDoJS {
         val isCompleted: Boolean = true
         val title: String = todo.title
         val id: String = todo.id
@@ -93,7 +93,7 @@ class ToDoActionDispatcher(
 
     Fetch.fetch(reqInfo).toFuture.flatMap(r => r.json().toFuture)
       .map(r => {
-        val result = r.asInstanceOf[js.Array[ToDoVO]]
+        val result = r.asInstanceOf[js.Array[ToDoJS]]
         val actionObject = new ToDoAction {
           val `type` = actionType
           val todoList = result
@@ -121,11 +121,11 @@ class ToDoActionDispatcher(
 @ScalaJSDefined
 trait ToDoAction extends js.Object {
   val `type`: String
-  val todoList: js.Array[ToDoVO]
+  val todoList: js.Array[ToDoJS]
 }
 
 @ScalaJSDefined
-trait ToDoVO extends js.Object {
+trait ToDoJS extends js.Object {
   val id: String
   val title: String
   val isCompleted: Boolean
