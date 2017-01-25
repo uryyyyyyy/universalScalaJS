@@ -1,6 +1,6 @@
 package com.github.uryyyyyyy.universal_scalajs.front
 
-import com.github.uryyyyyyy.universal_scalajs.domain.ToDo
+import com.github.uryyyyyyy.universal_scalajs.front.ToDoReduxModule.MyJsTrait
 import org.scalajs.dom.experimental.{Fetch, ReadableStream}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -8,8 +8,6 @@ import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
 import scala.scalajs.js.annotation.{JSExport, ScalaJSDefined}
 import scala.scalajs.js.typedarray.Uint8Array
-import io.circe._
-import io.circe.parser._
 
 
 // ---------------
@@ -34,21 +32,7 @@ object ToDoReduxModule {
   }
 
   @JSExport
-  def reducer(
-    state :js.Array[ToDoVO],
-    action: ActionBase
-  ): js.Array[ToDoVO] = {
-    if(state == null) return js.Array.apply()// initialState
-
-    if(action.`type` == "ADD_TODO"){
-      state
-    }else{
-      state
-    }
-  }
-
-  @JSExport
-  def fetch2(url :String): js.Promise[ReadableStream[Uint8Array]] = {
+  def fetch2(url: String): js.Promise[ReadableStream[Uint8Array]] = {
     Fetch.fetch(url).toFuture.map(r => {
       println(r.body)
       r.body
@@ -56,19 +40,29 @@ object ToDoReduxModule {
   }
 
   @JSExport
-  def createToDoActionDispatcher(
-    dispatch: js.Function1[ActionBase, js.Any]
-    //todoList: List[ToDo]
-  ): ToDoActionDispatcher = {
-    new ToDoActionDispatcher(dispatch)
+  def createFunc(): js.Function2[js.UndefOr[Int], ActionBase, Int] = {
+    (state: js.UndefOr[Int], action: ActionBase) => {
+      state.toOption match {
+        case None => 2
+        case Some(x) =>
+          action.`type` match {
+            case "SCALA_ADD" => {
+              val aaction = action.asInstanceOf[AddToDoAction]
+              x + aaction.todo
+            }
+            case _ => x
+          }
+      }
+    }
   }
 
   @JSExport
-  def circeSample(rawJson: String): Unit = {
-    val parseResult = parse(rawJson)
-    println(parseResult)
+  def createToDoActionDispatcher(
+                                  dispatch: js.Function1[ActionBase, js.Any],
+                                  todoList: Int
+                                ): ToDoActionDispatcher = {
+    new ToDoActionDispatcher(dispatch, todoList)
   }
-
 
 }
 
@@ -78,18 +72,27 @@ object ToDoReduxModule {
 // ---------------
 
 class ToDoActionDispatcher(
-  val dispatch: js.Function1[ActionBase, js.Any]
-){
+                            val dispatch: js.Function1[ActionBase, js.Any],
+                            val todoList: Int
+                          ) {
   @JSExport
-  def addToDoAction(todo: ToDoJSON): Unit ={
-    val actionObject = js.Dynamic.literal(`type` = "ADD_TODO", todo = todo).asInstanceOf[ActionBase]
+  def addToDoAction(_todo: Int): Unit = {
+    val actionObject = new AddToDoAction {
+      val todo = _todo
+    }
     this.dispatch(actionObject)
   }
 }
 
-@js.native
+@ScalaJSDefined
 trait ActionBase extends js.Object {
-  val `type`: String = js.native
+  val `type`: String
+}
+
+@ScalaJSDefined
+trait AddToDoAction extends ActionBase {
+  val `type` = "SCALA_ADD"
+  val todo: Int
 }
 
 @js.native
@@ -98,9 +101,9 @@ trait ToDoJSON extends js.Object {
   val title: String = js.native
 }
 
-case class ToDoVO(id: String, title: String, isFinished: Boolean){
+case class ToDoVO(id: String, title: String, isFinished: Boolean) {
   @JSExport
-  def getTitle():String = this.title
+  def getTitle(): String = this.title
 
   @JSExport
   def isEqual(obj: scala.Any): Boolean = this == obj
