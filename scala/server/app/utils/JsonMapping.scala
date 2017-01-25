@@ -1,6 +1,6 @@
 package utils
 
-import com.github.uryyyyyyy.scalajsddd.sample.domain.ToDo
+import com.github.uryyyyyyy.universal_scalajs.domain.ToDo
 import play.api.libs.json.Json
 
 object JsonMapping {

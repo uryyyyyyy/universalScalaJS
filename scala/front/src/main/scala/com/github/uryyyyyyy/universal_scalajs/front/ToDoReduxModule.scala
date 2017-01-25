@@ -1,13 +1,13 @@
 package com.github.uryyyyyyy.universal_scalajs.front
 
-import com.github.uryyyyyyy.universal_scalajs.front.ToDoReduxModule.MyJsTrait
-import org.scalajs.dom.experimental.{Fetch, ReadableStream}
+import org.scalajs.dom.experimental._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.scalajs.js
 import scala.scalajs.js.JSConverters._
+import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.{JSExport, ScalaJSDefined}
-import scala.scalajs.js.typedarray.Uint8Array
+import scala.util.Random
 
 
 // ---------------
@@ -17,51 +17,13 @@ import scala.scalajs.js.typedarray.Uint8Array
 @JSExport("ToDoReduxModule")
 object ToDoReduxModule {
 
-  @ScalaJSDefined
-  trait MyJsTrait extends js.Object {
-    val name: String
-    val id: Int
-  }
-
-  @JSExport
-  def helloWorld(): js.Object = {
-    new MyJsTrait {
-      val id = 5
-      val name = "haha"
-    }
-  }
-
-  @JSExport
-  def fetch2(url: String): js.Promise[ReadableStream[Uint8Array]] = {
-    Fetch.fetch(url).toFuture.map(r => {
-      println(r.body)
-      r.body
-    }).toJSPromise
-  }
-
-  @JSExport
-  def createFunc(): js.Function2[js.UndefOr[Int], ActionBase, Int] = {
-    (state: js.UndefOr[Int], action: ActionBase) => {
-      state.toOption match {
-        case None => 2
-        case Some(x) =>
-          action.`type` match {
-            case "SCALA_ADD" => {
-              val aaction = action.asInstanceOf[AddToDoAction]
-              x + aaction.todo
-            }
-            case _ => x
-          }
-      }
-    }
-  }
-
   @JSExport
   def createToDoActionDispatcher(
-                                  dispatch: js.Function1[ActionBase, js.Any],
-                                  todoList: Int
-                                ): ToDoActionDispatcher = {
-    new ToDoActionDispatcher(dispatch, todoList)
+    dispatch: js.Function1[ToDoAction, js.Any],
+    todoList: js.Array[ToDoVO],
+    actionType: String
+  ): ToDoActionDispatcher = {
+    new ToDoActionDispatcher(dispatch, todoList, actionType)
   }
 
 }
@@ -72,39 +34,99 @@ object ToDoReduxModule {
 // ---------------
 
 class ToDoActionDispatcher(
-                            val dispatch: js.Function1[ActionBase, js.Any],
-                            val todoList: Int
-                          ) {
+  val dispatch: js.Function1[ToDoAction, js.Any],
+  val _todoList: js.Array[ToDoVO],
+  val actionType: String
+) {
   @JSExport
-  def addToDoAction(_todo: Int): Unit = {
-    val actionObject = new AddToDoAction {
-      val todo = _todo
+  def addToDo(_title: String): Unit = {
+    val newId = new Random().nextInt(10000).toString
+    val newToDo = new ToDoVO {
+      val isCompleted: Boolean = false
+      val title: String = _title
+      val id: String = newId
+    }
+    val newToDList = _todoList.toSeq.:+(newToDo).toJSArray
+    val actionObject = new ToDoAction {
+      val `type` = actionType
+      val todoList = newToDList
     }
     this.dispatch(actionObject)
+  }
+
+  @JSExport
+  def complete(_id: String): Unit = {
+    val newList = _todoList.toSeq.map(todo => {
+      if(todo.id != _id) todo else new ToDoVO {
+        val isCompleted: Boolean = true
+        val title: String = todo.title
+        val id: String = todo.id
+      }
+    }).toJSArray
+    val actionObject = new ToDoAction {
+      val `type` = actionType
+      val todoList = newList
+    }
+    this.dispatch(actionObject)
+  }
+
+  @JSExport
+  def deleteToDo(_id: String): Unit = {
+    val newList = _todoList.toSeq.filter(todo => todo.id != _id).toJSArray
+    val actionObject = new ToDoAction {
+      val `type` = actionType
+      val todoList = newList
+    }
+    this.dispatch(actionObject)
+  }
+
+
+  @JSExport
+  def fetchFromServer(): js.Promise[Any] = {
+    val reqInfo: RequestInfo = new Request(
+      "http://localhost:3000/api/todos",
+      RequestInit(
+        method = HttpMethod.GET,
+        headers = js.Dictionary[ByteString](("Content-Type", "application/json"), ("Accept", "application/json"))
+      )
+    )
+
+    Fetch.fetch(reqInfo).toFuture.flatMap(r => r.json().toFuture)
+      .map(r => {
+        val result = r.asInstanceOf[js.Array[ToDoVO]]
+        val actionObject = new ToDoAction {
+          val `type` = actionType
+          val todoList = result
+        }
+        this.dispatch(actionObject)
+      }).toJSPromise
+  }
+
+  @JSExport
+  def saveToServer(): js.Promise[Any] = {
+    val reqInfo: RequestInfo = new Request(
+      "http://localhost:3000/api/todos",
+      RequestInit(
+        method = HttpMethod.PUT,
+        body = JSON.stringify(_todoList),
+        headers = js.Dictionary[ByteString](("Content-Type", "application/json"), ("Accept", "application/json"))
+      )
+    )
+
+    Fetch.fetch(reqInfo).toFuture.flatMap(r => r.json().toFuture)
+      .toJSPromise
   }
 }
 
 @ScalaJSDefined
-trait ActionBase extends js.Object {
+trait ToDoAction extends js.Object {
   val `type`: String
+  val todoList: js.Array[ToDoVO]
 }
 
 @ScalaJSDefined
-trait AddToDoAction extends ActionBase {
-  val `type` = "SCALA_ADD"
-  val todo: Int
-}
-
-@js.native
-trait ToDoJSON extends js.Object {
-  val isFinished: Boolean = js.native
-  val title: String = js.native
-}
-
-case class ToDoVO(id: String, title: String, isFinished: Boolean) {
-  @JSExport
-  def getTitle(): String = this.title
-
-  @JSExport
-  def isEqual(obj: scala.Any): Boolean = this == obj
+trait ToDoVO extends js.Object {
+  val id: String
+  val title: String
+  val isCompleted: Boolean
 }
