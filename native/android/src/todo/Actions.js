@@ -1,7 +1,7 @@
 // @flow
 
 import {IToDo} from "./Entities";
-export const TODO_UPDATE: string = 'counter/increment';
+export const TODO_UPDATE: string = 'todo/update';
 
 const myHeaders = {
   "Content-Type": "application/json",
@@ -44,7 +44,7 @@ export class ToDoActionDispatcher {
 
   async fetchFromServer(): Promise<void> {
     try {
-      const response: Response = await fetch('http://localhost:9000/api/todos', {
+      const response: Response = await fetch('http://localhost:3000/api/todos', {
         method: 'GET',
         headers: myHeaders
       });
@@ -62,7 +62,7 @@ export class ToDoActionDispatcher {
 
   async saveToServer(): Promise<void> {
     try {
-      const response: Response = await fetch('http://localhost:9000/api/todos', {
+      const response: Response = await fetch('http://localhost:3000/api/todos', {
         method: 'PUT',
         headers: myHeaders,
         body: JSON.stringify(this.todoList)

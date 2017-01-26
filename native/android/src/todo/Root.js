@@ -1,17 +1,17 @@
 // @flow
 
 import * as React from "react";
-import {Counter} from "./Counter";
+import {Counter} from "./ToDoList";
 import {connect} from "react-redux";
 import {ToDoActionDispatcher, TODO_UPDATE} from "./Actions";
-import {ToDoReduxModule} from "../../scalajsDist/front-opt"
+// import {ToDoReduxModule} from "../../scalajsDist/front-opt"
 
-const myModule = ToDoReduxModule()
+// const myModule = ToDoReduxModule()
 
 const mergeProps = (store:any, dispatch:any, ownProps:any) => {
   return {
     todoList: store.todoList,
-    actions: myModule.createToDoActionDispatcher(dispatch.dispatch, store.todoList, TODO_UPDATE)
+    actions: new ToDoActionDispatcher(dispatch.dispatch, store.todoList, TODO_UPDATE)
   }
 }
 
